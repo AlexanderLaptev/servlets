@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SerializationRegistry {
-    public static final SerializationRegistry INSTANCE = new SerializationRegistry();
-
     private final Map<Class<?>, BodySerializer> serializers = new HashMap<>();
 
-    private static final BodySerializer DEFAULT_SERIALIZER = new GsonBodySerializer();
+    private final BodySerializer defaultSerializer;
 
-    private SerializationRegistry() { }
+    public SerializationRegistry(BodySerializer defaultSerializer) {
+        this.defaultSerializer = defaultSerializer;
+    }
 
     public void registerSerializer(final Class<?> clazz, final BodySerializer serializer) {
         serializers.put(clazz, serializer);
@@ -18,7 +18,7 @@ public class SerializationRegistry {
 
     public BodySerializer getSerializerForClass(Class<?> clazz) {
         var serializer = serializers.get(clazz);
-        return (serializer == null) ? DEFAULT_SERIALIZER : serializer;
+        return (serializer == null) ? defaultSerializer : serializer;
     }
 
     public BodySerializer getSerializerForObject(Object object) {

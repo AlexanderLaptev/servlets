@@ -7,30 +7,50 @@ import ru.vsu.cs.framework.controller.Controller;
 import ru.vsu.cs.framework.controller.ControllerServlet;
 import ru.vsu.cs.framework.logging.DisabledLogger;
 import ru.vsu.cs.framework.logging.Logger;
+import ru.vsu.cs.framework.serialization.BodySerializer;
+import ru.vsu.cs.framework.serialization.SerializationRegistry;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class Application {
+    private static Application application;
+
+    public static Application getApplication() {
+        return application;
+    }
+
+    private Tomcat tomcat;
     private final Configuration configuration;
     private final Logger logger;
     private final Set<Controller> controllers;
+    private final SerializationRegistry serializationRegistry;
 
-    private Tomcat tomcat;
-
-    private Application(Configuration configuration, Logger logger, Set<Controller> controllers) {
+    private Application(
+            Configuration configuration,
+            Logger logger,
+            Set<Controller> controllers,
+            BodySerializer fallbackSerializer
+    ) {
         this.configuration = configuration;
         this.logger = logger;
         this.controllers = controllers;
+        this.serializationRegistry = new SerializationRegistry(fallbackSerializer);
     }
 
     public static class Builder {
         private Configuration configuration;
         private Logger logger = DisabledLogger.INSTANCE;
         private final Set<Controller> controllers = new HashSet<>();
+        private BodySerializer fallbackSerializer;
 
         public Application build() {
-            return new Application(configuration, logger, controllers);
+            return new Application(
+                    configuration,
+                    logger,
+                    controllers,
+                    fallbackSerializer
+            );
         }
 
         public Builder withConfiguration(Configuration configuration) {
@@ -43,18 +63,28 @@ public class Application {
             return this;
         }
 
+        public Builder setFallbackSerializer(BodySerializer fallbackSerializer) {
+            this.fallbackSerializer = fallbackSerializer;
+            return this;
+        }
+
         public Builder addController(Controller controller) {
             controllers.add(controller);
             return this;
         }
     }
 
+    public SerializationRegistry getSerializationRegistry() {
+        return serializationRegistry;
+    }
+
     public void run(String[] commandLineArgs) {
         logger.info("Starting application");
-        if (tomcat != null) {
+        if (application != null) {
             logger.error("Application is already running");
             return;
         }
+        application = this;
 
         var applicationName = configuration.getProperty("application.name");
         if (applicationName == null) {

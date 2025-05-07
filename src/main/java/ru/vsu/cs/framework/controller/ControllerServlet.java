@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import ru.vsu.cs.framework.serialization.SerializationRegistry;
+import ru.vsu.cs.framework.application.Application;
 import ru.vsu.cs.framework.util.UrlUtils;
 
 import java.io.IOException;
@@ -37,7 +37,10 @@ public class ControllerServlet extends HttpServlet {
 
         var body = response.getBody();
         if (body != null) {
-            var serializer = SerializationRegistry.INSTANCE.getSerializerForObject(body);
+            var serializer = Application
+                    .getApplication()
+                    .getSerializationRegistry()
+                    .getSerializerForObject(body);
             resp.getOutputStream().write(serializer.serialize(body));
         }
 

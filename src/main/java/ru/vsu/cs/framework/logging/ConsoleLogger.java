@@ -21,11 +21,11 @@ public class ConsoleLogger implements Logger {
 
     @Override
     public void error(String message) {
-        System.out.println(formatter.format(LogLevel.ERROR, message, null));
+        System.err.println(formatter.format(LogLevel.ERROR, message, null));
     }
 
     @Override
     public void error(String message, Throwable t) {
-        System.out.println(formatter.format(LogLevel.INFO, message, t));
+        System.err.println(formatter.format(LogLevel.INFO, message, t));
     }
 }

@@ -6,9 +6,19 @@ import java.util.Map;
 public class SerializationRegistry {
     private final Map<Class<?>, BodySerializer> serializers = new HashMap<>();
 
-    private final BodySerializer defaultSerializer;
+    private BodySerializer defaultSerializer = GsonBodySerializer.INSTANCE;
+
+    public SerializationRegistry() { }
 
     public SerializationRegistry(BodySerializer defaultSerializer) {
+        this.defaultSerializer = defaultSerializer;
+    }
+
+    public BodySerializer getDefaultSerializer() {
+        return defaultSerializer;
+    }
+
+    public void setDefaultSerializer(BodySerializer defaultSerializer) {
         this.defaultSerializer = defaultSerializer;
     }
 

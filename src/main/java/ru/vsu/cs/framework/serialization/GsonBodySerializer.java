@@ -6,6 +6,10 @@ import com.google.gson.GsonBuilder;
 import java.nio.charset.StandardCharsets;
 
 public class GsonBodySerializer implements BodySerializer {
+    public static final GsonBodySerializer INSTANCE = new GsonBodySerializer();
+
+    private GsonBodySerializer() { }
+
     private static final Gson GSON = new GsonBuilder()
             .create();
 

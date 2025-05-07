@@ -9,7 +9,6 @@ import ru.vsu.cs.framework.controller.ControllerServlet;
 import ru.vsu.cs.framework.logging.DisabledLogger;
 import ru.vsu.cs.framework.logging.Logger;
 import ru.vsu.cs.framework.serialization.BodySerializer;
-import ru.vsu.cs.framework.serialization.GsonBodySerializer;
 import ru.vsu.cs.framework.serialization.SerializationRegistry;
 
 import java.util.HashSet;
@@ -32,26 +31,26 @@ public class Application {
             Configuration configuration,
             Logger logger,
             Set<Controller> controllers,
-            BodySerializer fallbackSerializer
+            SerializationRegistry serializationRegistry
     ) {
         this.configuration = configuration;
         this.logger = logger;
         this.controllers = controllers;
-        this.serializationRegistry = new SerializationRegistry(fallbackSerializer);
+        this.serializationRegistry = serializationRegistry;
     }
 
     public static class Builder {
         private Configuration configuration = new ClasspathPropertiesConfiguration("config.properties");
         private Logger logger = DisabledLogger.INSTANCE;
         private final Set<Controller> controllers = new HashSet<>();
-        private BodySerializer fallbackSerializer = new GsonBodySerializer();
+        private final SerializationRegistry serializationRegistry = new SerializationRegistry();
 
         public Application build() {
             return new Application(
                     configuration,
                     logger,
                     controllers,
-                    fallbackSerializer
+                    serializationRegistry
             );
         }
 
@@ -66,7 +65,7 @@ public class Application {
         }
 
         public Builder setFallbackSerializer(BodySerializer fallbackSerializer) {
-            this.fallbackSerializer = fallbackSerializer;
+            serializationRegistry.setDefaultSerializer(fallbackSerializer);
             return this;
         }
 

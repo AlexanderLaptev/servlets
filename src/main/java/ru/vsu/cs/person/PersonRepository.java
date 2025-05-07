@@ -1,4 +1,4 @@
-package ru.vsu.cs;
+package ru.vsu.cs.person;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,8 @@ public class PersonRepository {
         Person[] people = {p1, p2, p3, p4};
         for (Person p : people) INSTANCE.save(p);
     }
+
+    private PersonRepository() { }
 
     public void save(Person person) {
         people.add(person);

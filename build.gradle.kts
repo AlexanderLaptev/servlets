@@ -1,6 +1,6 @@
 plugins {
     java
-    war
+    application
 }
 
 group = "ru.vsu.cs.servlets"
@@ -10,6 +10,10 @@ tasks.withType<JavaCompile> {
     sourceCompatibility = "21"
     targetCompatibility = "21"
     options.encoding = "UTF-8"
+}
+
+application {
+    mainClass = "ru.vsu.cs.Main"
 }
 
 repositories {

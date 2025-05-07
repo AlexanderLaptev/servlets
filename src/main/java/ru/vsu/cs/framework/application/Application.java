@@ -8,11 +8,13 @@ import ru.vsu.cs.framework.controller.Controller;
 import ru.vsu.cs.framework.controller.ControllerServlet;
 import ru.vsu.cs.framework.logging.DisabledLogger;
 import ru.vsu.cs.framework.logging.Logger;
-import ru.vsu.cs.framework.serialization.BodySerializer;
 import ru.vsu.cs.framework.serialization.SerializationRegistry;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class Application {
     private static Application application;
@@ -21,71 +23,100 @@ public class Application {
         return application;
     }
 
-    private Tomcat tomcat;
-    private final Configuration configuration;
-    private final Logger logger;
-    private final Set<Controller> controllers;
-    private final SerializationRegistry serializationRegistry;
-
-    private Application(
-            Configuration configuration,
-            Logger logger,
-            Set<Controller> controllers,
-            SerializationRegistry serializationRegistry
-    ) {
-        this.configuration = configuration;
-        this.logger = logger;
-        this.controllers = controllers;
-        this.serializationRegistry = serializationRegistry;
+    public Application() {
+        if (application != null) {
+            throw new IllegalStateException("Application is already initialized");
+        }
+        application = this;
     }
 
-    public static class Builder {
-        private Configuration configuration = new ClasspathPropertiesConfiguration("config.properties");
-        private Logger logger = DisabledLogger.INSTANCE;
-        private final Set<Controller> controllers = new HashSet<>();
-        private final SerializationRegistry serializationRegistry = new SerializationRegistry();
+    private final Map<Class<?>, Map<String, Supplier<?>>> beans = new HashMap<>();
+    private boolean isRunning = false;
 
-        public Application build() {
-            return new Application(
-                    configuration,
-                    logger,
-                    controllers,
-                    serializationRegistry
-            );
-        }
+    private Tomcat tomcat;
+    private Configuration configuration = new ClasspathPropertiesConfiguration("config.properties");
+    private Logger logger = DisabledLogger.INSTANCE;
+    private Set<Controller> controllers = new HashSet<>();
+    private SerializationRegistry serializationRegistry = new SerializationRegistry();
 
-        public Builder withConfiguration(Configuration configuration) {
-            this.configuration = configuration;
-            return this;
-        }
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
-        public Builder withLogger(Logger logger) {
-            this.logger = logger;
-            return this;
-        }
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
 
-        public Builder setFallbackSerializer(BodySerializer fallbackSerializer) {
-            serializationRegistry.setDefaultSerializer(fallbackSerializer);
-            return this;
-        }
-
-        public Builder addController(Controller controller) {
-            controllers.add(controller);
-            return this;
-        }
+    public Application addController(Controller controller) {
+        controllers.add(controller);
+        return this;
     }
 
     public SerializationRegistry getSerializationRegistry() {
         return serializationRegistry;
     }
 
+    public <T> Application addFactoryBean(Class<? extends T> clazz, Supplier<? extends T> factory) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        forClass.put(null, factory);
+        return this;
+    }
+
+    public <T> Application addFactoryBean(Class<? extends T> clazz, String name, Supplier<? extends T> factory) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        forClass.put(name, factory);
+        return this;
+    }
+
+    public <T> Application addSingletonBean(Class<? extends T> clazz, T bean) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        forClass.put(null, () -> bean);
+        return this;
+    }
+
+    public <T> Application addSingletonBean(Class<? extends T> clazz, String name, T bean) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        forClass.put(name, () -> bean);
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(Class<? extends T> clazz) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        var result = forClass.get(null);
+        if (result != null) { return (T) result.get(); }
+        if (!forClass.isEmpty()) {
+            for (var bean : forClass.values()) {
+                return (T) bean.get();
+            }
+        }
+        throw new BeanNotFoundException("Could not find bean for class " + clazz);
+    }
+
+    public Object getBean(String name) {
+        for (var clazz : beans.keySet()) {
+            var classBeans = beans.get(clazz);
+            if (classBeans == null) { continue; }
+            for (var beanName : classBeans.keySet()) {
+                if (beanName.equals(name)) { return classBeans.get(beanName).get(); }
+            }
+        }
+        throw new BeanNotFoundException("Could not find bean with name " + name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(Class<? extends T> clazz, String name) {
+        var forClass = beans.computeIfAbsent(clazz, k -> new HashMap<>());
+        return (T) forClass.get(name);
+    }
+
     public void run(String[] commandLineArgs) {
         logger.info("Starting application");
-        if (application != null) {
+        if (application.isRunning) {
             logger.error("Application is already running");
             return;
         }
-        application = this;
+        application.isRunning = true;
 
         var applicationName = configuration.getProperty("application.name");
         if (applicationName == null) {

@@ -22,4 +22,5 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.5")
     implementation("org.eclipse.jetty:apache-jstl:11.0.0")
     implementation("com.google.code.gson:gson:2.13.1")
+    implementation("org.apache.tomcat.embed:tomcat-embed-core:11.0.6")
 }

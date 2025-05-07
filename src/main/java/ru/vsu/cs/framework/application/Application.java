@@ -1,5 +1,6 @@
 package ru.vsu.cs.framework.application;
 
+import org.apache.catalina.startup.Tomcat;
 import ru.vsu.cs.framework.controller.Controller;
 
 public class Application {
@@ -21,5 +22,6 @@ public class Application {
     }
 
     public void run(String[] commandLineArgs) {
+        var tomcat = new Tomcat();
     }
 }

@@ -11,6 +11,6 @@ public class CategoryController extends Controller {
     }
 
     public HttpResponse getAll(HttpRequest request) {
-        return new HttpResponse(HttpResponse.OK);
+        return new HttpResponse(HttpResponse.BAD_REQUEST);
     }
 }

@@ -77,7 +77,7 @@ public class Application {
         for (var controller : controllers) {
             var servletName = controller.getClass().getSimpleName();
             Tomcat.addServlet(context, servletName, new ControllerServlet(controller));
-            context.addServletMappingDecoded(controller.getRootPath(), servletName);
+            context.addServletMappingDecoded(controller.getRootPath() + "/*", servletName);
         }
 
         try {

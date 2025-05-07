@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import ru.vsu.cs.framework.util.UrlUtils;
 
 import java.io.IOException;
 
@@ -22,6 +23,24 @@ public class ControllerServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        return;
+        var path = getRelativeMapping(UrlUtils.getResourcePath(req.getRequestURL()));
+
+        var handlers = controller.getGetHandlers();
+        var handler = handlers.get(path);
+        if (handler == null) {
+            resp.sendError(HttpResponse.NOT_FOUND);
+            return;
+        }
+
+        var response = handler.handleRequest(new HttpRequest());
+        resp.setStatus(response.getStatusCode());
+    }
+
+    private String getRelativeMapping(String resourcePath) {
+        var result = resourcePath.substring(controller.getRootPath().length());
+        if (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 }

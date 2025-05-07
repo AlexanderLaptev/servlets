@@ -17,18 +17,13 @@ public class Controller {
     }
 
     public void addGetPath(String path, HttpRequestHandler requestHandler) {
-        var fullPath = makeFullPath(path);
-        if (getHandlers.get(fullPath) != null) {
+        if (getHandlers.get(path) != null) {
             throw new IllegalStateException("A GET handler is already defined for path " + path);
         }
-        getHandlers.put(fullPath, requestHandler);
+        getHandlers.put(path, requestHandler);
     }
 
     public Map<String, HttpRequestHandler> getGetHandlers() {
         return getHandlers;
-    }
-
-    private String makeFullPath(String path) {
-        return "/" + rootPath + "/" + path;
     }
 }

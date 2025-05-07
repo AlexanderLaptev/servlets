@@ -7,9 +7,13 @@ import ru.vsu.cs.framework.controller.Controller;
 import ru.vsu.cs.framework.logging.DisabledLogger;
 import ru.vsu.cs.framework.logging.Logger;
 
+import java.util.logging.Level;
+
 public class Application {
     private final Configuration configuration;
     private final Logger logger;
+
+    private Tomcat tomcat;
 
     private Application(Configuration configuration, Logger logger) {
         this.configuration = configuration;
@@ -41,17 +45,29 @@ public class Application {
 
     public void run(String[] commandLineArgs) {
         logger.info("Starting application");
+        if (tomcat != null) {
+            logger.error("Application is already running");
+            return;
+        }
 
-        var tomcat = new Tomcat();
+        tomcat = new Tomcat();
         var serverPort = configuration.getIntProperty("server.port", 8080);
         tomcat.setPort(serverPort);
+        java.util.logging.Logger.getLogger("org.apache").setLevel(Level.OFF);
         logger.info("Initialized embedded Tomcat server on port " + serverPort);
 
         try {
             tomcat.start();
-            logger.info("Tomcat started");
+            logger.info("Tomcat running");
         } catch (LifecycleException e) {
-            logger.error("Lifecycle exception:", e);
+            logger.error("Lifecycle exception, stopping server", e);
+            try {
+                tomcat.stop();
+                logger.info("Graceful shutdown complete");
+            } catch (LifecycleException ex) {
+                logger.error("Exception during graceful shutdown", ex);
+                throw new RuntimeException(ex);
+            }
         }
     }
 }

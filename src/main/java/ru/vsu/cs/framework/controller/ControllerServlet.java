@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import ru.vsu.cs.framework.serialization.SerializationRegistry;
 import ru.vsu.cs.framework.util.UrlUtils;
 
 import java.io.IOException;
@@ -33,6 +34,13 @@ public class ControllerServlet extends HttpServlet {
         }
 
         var response = handler.handleRequest(new HttpRequest());
+
+        var body = response.getBody();
+        if (body != null) {
+            var serializer = SerializationRegistry.INSTANCE.getSerializerForObject(body);
+            resp.getOutputStream().write(serializer.serialize(body));
+        }
+
         resp.setStatus(response.getStatusCode());
     }
 

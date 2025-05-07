@@ -6,8 +6,8 @@ import ru.vsu.cs.framework.controller.HttpResponse;
 
 public class CategoryController extends Controller {
     public CategoryController() {
-        setRootPath("api/v1/category/");
-        addPath("", this::getAll);
+        super("/api/v1/category");
+        addGetPath("/all", this::getAll);
     }
 
     public HttpResponse getAll(HttpRequest request) {

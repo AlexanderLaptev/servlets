@@ -2,12 +2,14 @@ package ru.vsu.cs.framework.application;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
+import ru.vsu.cs.framework.application.configuration.ClasspathPropertiesConfiguration;
 import ru.vsu.cs.framework.application.configuration.Configuration;
 import ru.vsu.cs.framework.controller.Controller;
 import ru.vsu.cs.framework.controller.ControllerServlet;
 import ru.vsu.cs.framework.logging.DisabledLogger;
 import ru.vsu.cs.framework.logging.Logger;
 import ru.vsu.cs.framework.serialization.BodySerializer;
+import ru.vsu.cs.framework.serialization.GsonBodySerializer;
 import ru.vsu.cs.framework.serialization.SerializationRegistry;
 
 import java.util.HashSet;
@@ -39,10 +41,10 @@ public class Application {
     }
 
     public static class Builder {
-        private Configuration configuration;
+        private Configuration configuration = new ClasspathPropertiesConfiguration("config.properties");
         private Logger logger = DisabledLogger.INSTANCE;
         private final Set<Controller> controllers = new HashSet<>();
-        private BodySerializer fallbackSerializer;
+        private BodySerializer fallbackSerializer = new GsonBodySerializer();
 
         public Application build() {
             return new Application(
